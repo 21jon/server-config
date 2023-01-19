@@ -7,7 +7,7 @@ services:
   db: 
     image: postgres:15.1
     volumes:
-      - ./db:/var/lib/postgresql/data
+      - db:/var/lib/postgresql/data
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
@@ -26,7 +26,7 @@ services:
       - 3000:3000
     
     env_file:
-      - ./.env
+      - ./docker.env
 
     environment:
       - DATABASE_URL=postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
@@ -37,18 +37,17 @@ services:
       - db
     restart: unless-stopped
 
-  proxy:
+  nginx:
     image: nginx:latest
     container_name: nginx
     ports:
       - "80:80"
       - "443:443"
     volumes:
-      - ./config/nginx/conf.d:/etc/nginx/conf.d
+      
       - ./config/nginx.conf:/etc/nginx/nginx.conf
-      - ./config/snginx/ssl:/etc/nginx/ssl
-      - ./config/nginx/html:/usr/share/nginx/html
-
+      - /etc/letsencrypt/live/${DOMAIN}/:/etc/nginx/ssl/${DOMAIN}
+      
     restart: unless-stopped
     depends_on:
       - web
@@ -57,7 +56,11 @@ services:
     networks:
       - web
 
+
 networks:
    web:
    db:
 
+volumes:
+  db:
+ 
